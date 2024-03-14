@@ -1,0 +1,13 @@
+canvas {
+    position: fixed;
+    background: url("/asset/background.png") repeat 0 0;
+    width: 840px;
+    height: 650px;
+    animation: road 5s linear infinite;
+}
+
+@keyframes road {
+    from { background-position: 0 0 }
+    to {  background-position: 0 650px }
+
+}
