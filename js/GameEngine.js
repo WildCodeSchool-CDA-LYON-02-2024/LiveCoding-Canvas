@@ -1,5 +1,6 @@
 import {Drawable} from "./Drawable.js"
 import {PoliceCar} from "./PoliceCar.js";
+import {collision} from "./utils.js";
 
 
 class GameEngine {
@@ -7,6 +8,8 @@ class GameEngine {
     canvas = null
     ctx = null
     items = []
+    lasers = []
+
     player= null
 
     keys = {
@@ -24,17 +27,19 @@ class GameEngine {
         this.ctx = this.canvas.getContext('2d')
         this.canvas.width = 840
         this.canvas.height = 650
-        this.player = new Drawable('asset/tank.png', 300, 50)
+        this.player = new Drawable(300, 50, 'asset/tank.png')
       //  this.policeCar = new Drawable('asset/police_car.png',  300, 500)
     }
 
     init() {
         this.initEvent()
         this.items = [
-            new Drawable('asset/police_car.png',  300, 500),
-            new PoliceCar( 200, 200),
-            new Drawable('asset/police_car.png',  200, 300),
-            new PoliceCar(  400, 550)
+            new Drawable( 300, 500, 'asset/police_car.png'),
+            new PoliceCar( 200, 800),
+            new Drawable(  200, 600, 'asset/police_car.png'),
+            new PoliceCar(  400, 550),
+            new Drawable(350, 850, 'asset/police_car.png'),
+            new PoliceCar(  220, 550)
         ]
     }
 
@@ -73,6 +78,10 @@ class GameEngine {
                     this.keys.right = false;
                     break;
                 case ' ':
+                    const laser = new Drawable(null, null ,'asset/laser.png');
+                    laser.x = this.player.x + this.player.getImg().width / 2 - laser.getImg().width / 2;
+                    laser.y = this.player.y
+                    this.lasers.push(laser)
                     break;
             }
         });
@@ -100,21 +109,25 @@ class GameEngine {
             this.player.x = prevX
             this.player.y = prevY
         }
-
         this.collisionBorder()
+
+        this.collisionLaser()
+        this.lasers = this.lasers.filter(laser => laser.y < this.canvas.height && !laser.onDestroy)
+        for (let laser of this.lasers)
+        {
+            laser.y += 10
+        }
+
     }
 
     collisionItem() {
+        this.items = this.items.filter(item => !item.onDestroy)
         for (let item of this.items)
         {
-            if (
-                this.player.x < item.getImg().width + item.x
-                && this.player.x + this.player.getImg().width > item.x
-                && this.player.y < item.getImg().height + item.y
-                && this.player.y + this.player.getImg().height > item.y
-            ) {
+            if (collision(this.player, item)) {
                 return true
             }
+            item.y -= 1
         }
         return false
     }
@@ -126,11 +139,11 @@ class GameEngine {
         if (this.player.y < 0) {
             this.player.y= 0
         }
-        if (this.player.x + this.player.img.width > this.canvas.width) {
-            this.player.x = this.canvas.width - this.player.img.width
+        if (this.player.x + this.player.getImg().width > this.canvas.width) {
+            this.player.x = this.canvas.width - this.player.getImg().width
         }
-        if (this.player.y + this.player.img.height > this.canvas.height) {
-            this.player.y = this.canvas.height - this.player.img.height
+        if (this.player.y + this.player.getImg().height > this.canvas.height) {
+            this.player.y = this.canvas.height - this.player.getImg().height
         }
     }
 
@@ -140,10 +153,17 @@ class GameEngine {
         {
             this.ctx.drawImage(item.getImg(), item.x, item.y)
         }
+        for (let laser of this.lasers) {
+            this.ctx.drawImage(laser.getImg(), laser.x, laser.y)
+        }
+
         this.ctx.drawImage(this.player.getImg(), this.player.x, this.player.y)
     }
 
     gameLoop() {
+        if (this.items.length === 0) {
+            this.gameOver()
+        }
         this.update()
         this.draw()
         window.requestAnimationFrame(() => {
@@ -163,6 +183,25 @@ class GameEngine {
                 }
             })
         }
+    }
+
+    collisionLaser() {
+        for (let laser of this.lasers) {
+            for (let item of this.items) {
+                if (collision(laser, item)) {
+                    laser.onDestroy = true
+                    item.onDestroy = true
+                }
+            }
+        }
+    }
+
+    gameOver() {
+        document.getElementById('titleMenu').innerText = 'GAME OVER'
+        document.getElementById('contentMenu').innerText = 'Vous avez gagné !!!'
+        document.getElementById('startBtn').innerText = 'Restart the Game'
+
+        document.getElementById('menu').style = 'display: flex'
     }
 }
 

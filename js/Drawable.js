@@ -1,23 +1,33 @@
 class Drawable {
-
-    img = null
+    images = []
     x = 0
     y = 0
+    onDestroy = false
 
-    constructor(src, x, y) {
-        this.img = new Image()
-        this.img.src = src
+    constructor(x, y, ...sources) {
+        this.images = sources.map(src => {
+            const image = new Image()
+            image.src = src
+            return image
+        })
         this.x = x
         this.y = y
+        this.index = 0
     }
 
     getImg() {
-        return this.img
+        return this.images[this.index]
     }
 
     loaded(callback) {
-        this.img.onload = () => {
-            callback()
+        let count = 0
+        for (let image of this.images)
+        {
+            image.onload = () => {
+                if (++count === this.images.length) {
+                    callback()
+                }
+            }
         }
     }
 

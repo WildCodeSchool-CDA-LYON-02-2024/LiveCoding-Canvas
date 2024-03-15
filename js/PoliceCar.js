@@ -1,34 +1,19 @@
-class PoliceCar {
-    img1 = null
-    img2 = null
-    x = 0
-    y = 0
+import {Drawable} from "./Drawable.js";
+
+class PoliceCar extends Drawable {
 
     constructor(x, y) {
-        this.img1 = new Image()
-        this.img1.src = 'asset/police-car-siren-red.png'
-        this.img2 = new Image()
-        this.img2.src = 'asset/police-car-siren-blue.png'
-        this.x = x
-        this.y = y
+        super(x, y, 'asset/police-car-siren-red.png', 'asset/police-car-siren-blue.png')
         this.isRed = true
-        this.countFrame = 0
+        this.dateFrame = Date.now()
     }
 
     getImg() {
-        if (++this.countFrame === 20) {
+        if (this.dateFrame + 200 < Date.now()) {
             this.isRed = !this.isRed
-            this.countFrame = 0
+            this.dateFrame = Date.now()
         }
-        return this.isRed ? this.img1 : this.img2
-    }
-
-    loaded(callback) {
-        this.img1.onload = () => {
-           this.img2.onload = ()=> {
-                callback()
-            }
-        }
+        return this.isRed ? this.images[0] : this.images[1]
     }
 }
 

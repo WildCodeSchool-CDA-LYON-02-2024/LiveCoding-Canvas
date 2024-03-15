@@ -11,3 +11,38 @@ canvas {
     to {  background-position: 0 650px }
 
 }
+
+@font-face {
+    font-family: SuperPixel;
+    src: url("../asset/font/super-pixel-font/SuperPixel-m2L8j.ttf");
+}
+
+#menu {
+    position: relative;
+    width: 840px;
+    height: 650px;
+    background-color: rgba(0, 136, 91, 0.42);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    font-family: SuperPixel, serif;
+    align-items: center;
+}
+
+
+#menu > h1 {
+    color: red;
+}
+
+
+#menu > p {
+    font-size: 1.25rem;
+}
+
+#menu > button {
+    padding: 20px;
+    background-color: red;
+    border-radius: 30%;
+    font-size: 1.70rem;
+    font-family: SuperPixel, serif;
+}
