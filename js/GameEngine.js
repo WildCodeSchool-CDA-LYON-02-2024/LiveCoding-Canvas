@@ -1,4 +1,5 @@
 import {Drawable} from "./Drawable.js"
+import { Explosion } from "./Explosion.js";
 import {PoliceCar} from "./PoliceCar.js";
 import {collision} from "./utils.js";
 
@@ -9,8 +10,10 @@ class GameEngine {
     ctx = null
     items = []
     lasers = []
-
+    life = 5
+    isGameOver = false
     player= null
+    explosions = []
 
     keys = {
         up: false,
@@ -27,11 +30,11 @@ class GameEngine {
         this.ctx = this.canvas.getContext('2d')
         this.canvas.width = 840
         this.canvas.height = 650
-        this.player = new Drawable(300, 50, 'asset/tank.png')
-      //  this.policeCar = new Drawable('asset/police_car.png',  300, 500)
     }
 
     init() {
+        this.player = new Drawable(300, 50, 'asset/tank.png')
+        this.life = 5
         this.initEvent()
         this.items = [
             new Drawable( 300, 500, 'asset/police_car.png'),
@@ -113,19 +116,40 @@ class GameEngine {
 
         this.collisionLaser()
         this.lasers = this.lasers.filter(laser => laser.y < this.canvas.height && !laser.onDestroy)
+
         for (let laser of this.lasers)
         {
             laser.y += 10
         }
 
+        for (let explosion of this.explosions) {
+            if (!explosion.isFinished) {
+                explosion.currentFrameIndex++
+
+                if(explosion.currentFrameIndex >= explosion.images.length) {
+                    explosion.isFinished = true
+                }
+            }
+        }
+
+        this.explosions = this.explosions.filter(explosion => {
+            return !explosion.isFinished;
+        })
+
+        !this.isGameOver ? this.gameOver() : null;
     }
 
     collisionItem() {
         this.items = this.items.filter(item => !item.onDestroy)
-        for (let item of this.items)
-        {
+        for (let item of this.items) {
             if (collision(this.player, item)) {
+                item.onDestroy = true
+                this.life -= 1
                 return true
+            }
+            if (item.y < 0) {
+                this.life -= 1
+                item.onDestroy = true
             }
             item.y -= 1
         }
@@ -158,6 +182,22 @@ class GameEngine {
         }
 
         this.ctx.drawImage(this.player.getImg(), this.player.x, this.player.y)
+
+        for (let explosion of this.explosions) {
+            this.ctx.drawImage(explosion.getImg(), explosion.x, explosion.y)
+        }
+    }
+
+    createBlastSound() {
+        const explosionSound = new Audio('asset/sounds/explosion.wav')
+        return explosionSound.play()
+    }
+
+    createEnnemyExplosion(item) {
+        const explosion = new Explosion(null, null);
+        explosion.x = item.x
+        explosion.y = item.y
+        this.explosions.push(explosion)
     }
 
     gameLoop() {
@@ -191,17 +231,28 @@ class GameEngine {
                 if (collision(laser, item)) {
                     laser.onDestroy = true
                     item.onDestroy = true
+                    this.createEnnemyExplosion(item)
+                    this.createBlastSound()
                 }
             }
         }
     }
 
     gameOver() {
-        document.getElementById('titleMenu').innerText = 'GAME OVER'
-        document.getElementById('contentMenu').innerText = 'Vous avez gagné !!!'
-        document.getElementById('startBtn').innerText = 'Restart the Game'
+        if (this.life > 0 && this.items.length === 0) {
+            this.isGameOver = true
+            document.getElementById('titleMenu').innerText = 'GAME OVER'
+            document.getElementById('contentMenu').innerText = 'Vous avez gagné !!!'
+            document.getElementById('startBtn').innerText = 'Restart the Game'
+            document.getElementById('menu').style = 'display: flex'
+        } else if (this.life <= 0) {
+            this.isGameOver = true
+            document.getElementById('titleMenu').innerText = 'GAME OVER'
+            document.getElementById('contentMenu').innerText = 'LOSEEEEEER !!!'
+            document.getElementById('startBtn').innerText = 'Restart the Game'
+            document.getElementById('menu').style = 'display: flex'
+        }
 
-        document.getElementById('menu').style = 'display: flex'
     }
 }
 
